@@ -77,6 +77,7 @@ const Storage = {
                 if (char) Storage.saveCharacter(char);
             }, sec * 1000);
         },
+        },
         stop: function() {
             if (this._intervalId) {
                 clearInterval(this._intervalId);
