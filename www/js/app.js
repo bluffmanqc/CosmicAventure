@@ -8,7 +8,12 @@ const App = {
     // Initialisation
     init: function() {
         console.log('Initialisation de Cosmic Aventure...');
-        APIManager.loadKeys();
+        try {
+            APIManager.loadKeys();
+            console.log('Clés API chargées');
+        } catch(e) {
+            console.error('Erreur chargement API:', e);
+        }
         
         // Simuler un chargement
         setTimeout(() => {

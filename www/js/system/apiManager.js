@@ -61,7 +61,12 @@ const APIManager = {
     
     // Charger les clés API depuis le storage
     loadKeys: function() {
-        const saved = Storage.load('api_keys');
+        try {
+        const saved = JSON.parse(Storage.getItem('api_keys'));
+        } catch(e) {
+            console.log('Aucune clé API sauvegardée');
+            return;
+        }
         if (saved) {
             Object.keys(saved).forEach(provider => {
                 if (this.providers[provider]) {
