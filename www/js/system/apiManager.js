@@ -276,4 +276,4 @@ const APIManager = {
 };
 
 // Charger les clés au démarrage
-APIManager.loadKeys();
+// APIManager.loadKeys() moved to DOMContentLoaded

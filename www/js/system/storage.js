@@ -84,4 +84,11 @@ const Storage = {
             }
         }
     }
+    // === Méthodes alias pour compatibilité apiManager.js ===
+    load: function(key) {
+        return this.getItem(key);
+    },
+    save: function(key, value) {
+        this.setItem(key, value);
+    },
 };
