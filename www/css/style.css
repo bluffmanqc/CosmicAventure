@@ -1,0 +1,130 @@
+:root {
+    --bg-dark: #0a0a12;
+    --bg-panel: #151525;
+    --primary: #00f0ff;
+    --secondary: #7000ff;
+    --accent: #ff0055;
+    --text: #e0e0ff;
+    --text-dim: #8888aa;
+    --success: #00ff88;
+    --warning: #ffaa00;
+    --font-title: 'Orbitron', sans-serif;
+    --font-body: 'Roboto', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text);
+    font-family: var(--font-body);
+    height: 100vh;
+    overflow: hidden;
+    background-image: radial-gradient(circle at 50% 50%, #1a1a3a 0%, #0a0a12 100%);
+}
+
+.screen {
+    display: none;
+    height: 100vh;
+    width: 100vw;
+    flex-direction: column;
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.screen.active { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Header */
+.game-header {
+    background: linear-gradient(180deg, var(--bg-panel) 0%, transparent 100%);
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    position: relative;
+}
+
+.game-header h1 { font-family: var(--font-title); color: var(--primary); text-shadow: 0 0 10px var(--primary); font-size: 1.8rem; }
+.game-header h2 { font-family: var(--font-title); font-size: 1.2rem; }
+.subtitle { color: var(--text-dim); font-size: 0.9rem; margin-top: 5px; }
+
+.btn-back { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary); font-size: 1.5rem; cursor: pointer; }
+.btn-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
+
+/* Buttons */
+button {
+    font-family: var(--font-title);
+    padding: 15px 20px;
+    margin: 10px;
+    border: 1px solid var(--primary);
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--primary);
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+button:active { transform: scale(0.95); }
+.btn-primary { background: var(--primary); color: var(--bg-dark); font-weight: bold; width: 80%; max-width: 300px; align-self: center; }
+.btn-secondary { border-color: var(--secondary); color: var(--secondary); background: rgba(112, 0, 255, 0.1); width: 80%; max-width: 300px; align-self: center; }
+.btn-action { flex: 1; margin: 5px; font-size: 0.9rem; padding: 12px; }
+.btn-action.danger { border-color: var(--accent); color: var(--accent); background: rgba(255, 0, 85, 0.1); }
+
+/* Forms */
+.form-container, .settings-container { padding: 20px; flex: 1; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; color: var(--primary); margin-bottom: 8px; font-weight: bold; }
+.form-group input, .form-group select {
+    width: 100%; padding: 12px; background: var(--bg-panel); border: 1px solid var(--text-dim);
+    color: var(--text); border-radius: 6px; font-size: 1rem;
+}
+.desc-text { color: var(--text-dim); font-size: 0.85rem; margin-top: 5px; font-style: italic; }
+
+/* Story & Choices */
+.story-container { flex: 1; padding: 15px; overflow-y: auto; }
+.story-entry { background: var(--bg-panel); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid var(--primary); }
+.story-entry img { width: 100%; border-radius: 6px; margin-bottom: 10px; max-height: 200px; object-fit: cover; }
+.story-entry h3 { color: var(--primary); margin-bottom: 8px; font-family: var(--font-title); }
+.story-entry p { line-height: 1.5; }
+
+.choices-container { padding: 15px; background: var(--bg-panel); border-top: 1px solid rgba(255,255,255,0.1); }
+.choice-btn { width: 100%; margin: 8px 0; text-align: left; padding: 15px; background: rgba(0, 240, 255, 0.05); }
+
+/* Combat */
+.combat-arena { display: flex; justify-content: space-around; align-items: center; padding: 20px; background: rgba(0,0,0,0.3); }
+.combatant { text-align: center; width: 45%; }
+.combatant img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
+.vs-badge { font-family: var(--font-title); font-size: 1.5rem; color: var(--accent); font-weight: 900; }
+.hp-bar { width: 100%; height: 10px; background: #333; border-radius: 5px; margin: 8px 0; overflow: hidden; }
+.hp-bar div { height: 100%; background: var(--success); transition: width 0.3s; }
+.hp-bar-mini { width: 60px; height: 4px; background: #333; border-radius: 2px; margin-top: 4px; }
+.hp-bar-mini div { height: 100%; background: var(--success); transition: width 0.3s; }
+
+.combat-log { flex: 1; padding: 15px; overflow-y: auto; font-size: 0.9rem; }
+.combat-log p { margin-bottom: 5px; padding: 5px; background: rgba(255,255,255,0.05); border-radius: 4px; }
+.combat-log .damage { color: var(--accent); font-weight: bold; }
+.combat-log .heal { color: var(--success); font-weight: bold; }
+.combat-actions { display: flex; padding: 10px; background: var(--bg-panel); }
+
+/* Character Sheet */
+.sheet-container { padding: 15px; display: flex; flex-direction: column; align-items: center; }
+.portrait-section { text-align: center; margin-bottom: 20px; }
+.portrait-section img { width: 150px; height: 150px; border-radius: 12px; border: 2px solid var(--primary); object-fit: cover; }
+.stats-section { width: 100%; background: var(--bg-panel); padding: 15px; border-radius: 8px; }
+.stats-section ul { list-style: none; }
+.stats-section li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+/* Loader */
+#screen-loading { justify-content: center; align-items: center; }
+.spinner { width: 50px; height: 50px; border: 4px solid rgba(0, 240, 255, 0.3); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Mini Header in Game */
+.char-mini { display: flex; align-items: center; cursor: pointer; }
+.char-mini img { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--primary); margin-right: 10px; }
+.char-info { display: flex; flex-direction: column; }
+.char-info span { font-family: var(--font-title); font-size: 0.9rem; color: var(--primary); }
