@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><script>window.onerror=function(msg,url,line){alert("JS ERROR: "+msg+" at line "+line);}</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cosmic Aventure RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Écran de Chargement -->
+    <div id="screen-loading" class="screen active">
+        <div class="loader">
+            <div class="spinner"></div>
+            <h2>Initialisation de l'Univers...</h2>
+        </div>
+    </div>
+
+    <!-- Menu Principal -->
+    <div id="screen-main-menu" class="screen">
+        <header class="game-header">
+            <h1>COSMIC AVENTURE</h1>
+            <p class="subtitle">RPG Spatial IA Illimité</p>
+        </header>
+        <div class="menu-container">
+            <button class="btn-primary" onclick="App.showScreen('character-creation')">Nouvelle Partie</button>
+            <button class="btn-secondary" onclick="App.loadCharacters()">Continuer</button>
+            <button class="btn-secondary" onclick="App.showScreen('settings')">Paramètres & API</button>
+        </div>
+    </div>
+
+    <!-- Création de Personnage -->
+    <div id="screen-character-creation" class="screen">
+        <header class="game-header">
+            <button class="btn-back" onclick="App.showScreen('main-menu')">←</button>
+            <h2>Création de Personnage</h2>
+        </header>
+        <div class="form-container">
+            <div class="form-group">
+                <label>Nom du Héros</label>
+                <input type="text" id="char-name" placeholder="Ex: Zorak le Martien">
+            </div>
+            <div class="form-group">
+                <label>Race</label>
+                <select id="char-race" onchange="App.updateRaceDesc()">
+                    <option value="terrien">Terrien (Adaptable)</option>
+                    <option value="martien">Martien (Résistant)</option>
+                    <option value="raelien">Raëlien (Éthéré)</option>
+                    <option value="ptitgris">Petit Gris (Intelligent)</option>
+                </select>
+                <p id="race-desc" class="desc-text"></p>
+            </div>
+            <div class="form-group">
+                <label>Classe</label>
+                <select id="char-class" onchange="App.updateClassDesc()">
+                    <option value="ninja">Ninja Spatial (Furtivité/Corps à corps)</option>
+                    <option value="mercenaire">Mercenaire Blindé (Tank/Dégâts)</option>
+                    <option value="sorcier">Sorcier Cosmique (Magie/Contrôle)</option>
+                    <option value="necromancien">Nécromancien de l'Espace (Invocation)</option>
+                </select>
+                <p id="class-desc" class="desc-text"></p>
+            </div>
+            <button class="btn-primary" onclick="App.createCharacter()">Créer et Commencer</button>
+        </div>
+    </div>
+
+    <!-- Écran de Jeu Principal (Histoire & Exploration) -->
+    <div id="screen-game" class="screen">
+        <header class="game-header compact">
+            <div class="char-mini" onclick="App.showScreen('character-sheet')">
+                <img id="mini-portrait" src="" alt="Portrait">
+                <div class="char-info">
+                    <span id="mini-name">Nom</span>
+                    <div class="hp-bar-mini"><div id="mini-hp-bar"></div></div>
+                </div>
+            </div>
+            <button class="btn-icon" onclick="App.showScreen('main-menu')">☰</button>
+        </header>
+        
+        <div class="story-container" id="story-log">
+            <!-- Les entrées d'histoire s'ajoutent ici -->
+        </div>
+
+        <div class="choices-container" id="choices-log">
+            <!-- Les choix s'affichent ici -->
+        </div>
+    </div>
+
+    <!-- Écran de Combat -->
+    <div id="screen-combat" class="screen">
+        <header class="game-header combat-header">
+            <h2>⚔️ COMBAT ⚔️</h2>
+        </header>
+        <div class="combat-arena">
+            <div class="combatant enemy">
+                <img id="enemy-img" src="" alt="Ennemi">
+                <h3 id="enemy-name">Ennemi</h3>
+                <div class="hp-bar"><div id="enemy-hp-bar"></div></div>
+                <p id="enemy-hp-text">HP: 0/0</p>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="combatant player">
+                <img id="player-combat-img" src="" alt="Joueur">
+                <h3 id="player-combat-name">Joueur</h3>
+                <div class="hp-bar"><div id="player-combat-hp-bar"></div></div>
+                <p id="player-combat-hp-text">HP: 0/0</p>
+            </div>
+        </div>
+        <div class="combat-log" id="combat-log">
+            <!-- Journal de combat -->
+        </div>
+        <div class="combat-actions" id="combat-actions">
+            <button class="btn-action" onclick="Combat.playerAction('attack')">⚔️ Attaquer</button>
+            <button class="btn-action" onclick="Combat.playerAction('skill')">✨ Compétence</button>
+            <button class="btn-action" onclick="Combat.playerAction('item')">🎒 Objet</button>
+            <button class="btn-action danger" onclick="Combat.playerAction('flee')">🏃 Fuir</button>
+        </div>
+    </div>
+
+    <!-- Fiche de Personnage & Inventaire -->
+    <div id="screen-character-sheet" class="screen">
+        <header class="game-header">
+            <button class="btn-back" onclick="App.showScreen('game')">← Retour</button>
+            <h2>Fiche de Personnage</h2>
+        </header>
+        <div class="sheet-container">
+            <div class="portrait-section">
+                <img id="sheet-portrait" src="" alt="Portrait Dynamique">
+                <h3 id="sheet-name">Nom</h3>
+                <p id="sheet-race-class">Race - Classe</p>
+                <p>Niveau: <span id="sheet-level">1</span> | XP: <span id="sheet-xp">0</span></p>
+            </div>
+            <div class="stats-section">
+                <h4>Attributs</h4>
+                <ul id="sheet-attributes"></ul>
+                <h4>Équipement</h4>
+                <ul id="sheet-equipment"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paramètres -->
+    <div id="screen-settings" class="screen">
+        <header class="game-header">
+            <button class="btn-back" onclick="App.showScreen('main-menu')">←</button>
+            <h2>Paramètres & API</h2>
+        </header>
+        <div class="settings-container">
+            <div class="form-group">
+                <label>Clé API Grok (xAI) - Texte Illimité</label>
+                <input type="password" id="api-grok" placeholder="xai-...">
+            </div>
+            <div class="form-group">
+                <label>Clé API ElevenLabs (Voix)</label>
+                <input type="password" id="api-elevenlabs" placeholder="Clé API...">
+            </div>
+            <button class="btn-primary" onclick="App.saveSettings()">Sauvegarder les Paramètres</button>
+            <button class="btn-secondary" onclick="App.exportSave()">📥 Exporter Sauvegarde</button>
+            <button class="btn-secondary" onclick="App.importSavePrompt()">📤 Importer Sauvegarde</button>
+        </div>
+    </div>
+
+    <!-- GameMaster Chat Bubble -->
+    <div id="gm-chat-container" class="gm-chat-container">
+        <div class="gm-chat-header">
+            <span class="gm-chat-icon">🤖</span>
+            <span class="gm-chat-title">Maître de Jeu</span>
+            <button class="gm-chat-toggle" onclick="GameMasterChat.toggleMinimize()">−</button>
+        </div>
+        <div id="gm-messages" class="gm-messages"></div>
+        <div id="gm-typing" class="gm-typing" style="display:none;">
+            <span class="gm-typing-dot"></span>
+            <span class="gm-typing-dot"></span>
+            <span class="gm-typing-dot"></span>
+            <span>Le MJ réfléchit...</span>
+        </div>
+        <div id="gm-choices" class="gm-choices"></div>
+        <div class="gm-input-area">
+            <input type="text" id="gm-input" class="gm-input" placeholder="Parler au MJ..." maxlength="200">
+            <button id="gm-send-btn" class="gm-send-btn">➤</button>
+        </div>
+    </div>
+    <!-- Scripts -->
+    <script src="js/ai/images.js"></script>
+    <script src="js/game/rules.js"></script>
+    <script src="js/game/races.js"></script>
+    <script src="js/game/grimoire.js"></script>
+    <script src="js/game/gameMaster.js"></script>
+    <script src="js/system/storage.js"></script>
+    <script src="js/system/apiManager.js"></script>
+    <script src="js/ui/combat.js"></script>
+    <script src="js/ui/manager.js"></script>
+    <script src="js/ui/gameMasterChat.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
