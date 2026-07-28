@@ -77,19 +77,20 @@ const Storage = {
                 if (char) Storage.saveCharacter(char);
             }, sec * 1000);
         },
-        },
         stop: function() {
             if (this._intervalId) {
                 clearInterval(this._intervalId);
                 this._intervalId = null;
             }
         }
-    }
-    // === Méthodes alias pour compatibilité apiManager.js ===
+    },
+
     load: function(key) {
         return this.getItem(key);
     },
+
     save: function(key, value) {
         this.setItem(key, value);
     },
+
 };
