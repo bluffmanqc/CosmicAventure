@@ -62,7 +62,7 @@ const APIManager = {
     // Charger les clés API depuis le storage
     loadKeys: function() {
         try {
-        const saved = JSON.parse(Storage.getItem('api_keys'));
+        const saved = JSON.parse(localStorage.getItem('api_keys'));
         } catch(e) {
             console.log('Aucune clé API sauvegardée');
             return;
@@ -78,17 +78,20 @@ const APIManager = {
     
     // Sauvegarder les clés API
     saveKeys: function() {
-        const keys = {};
-        Object.keys(this.providers).forEach(provider => {
-            if (this.providers[provider].key) {
-                keys[provider] = this.providers[provider].key;
-            }
-        });
-        Storage.save('api_keys', keys);
+        try {
+            const keys = {};
+            Object.keys(this.providers).forEach(provider => {
+                if (this.providers[provider].key) {
+                    keys[provider] = this.providers[provider].key;
+                }
+            });
+            localStorage.setItem('api_keys', JSON.stringify(keys));
+            return true;
+        } catch(e) {
+            console.error('Erreur saveKeys:', e);
+            return false;
+        }
     },
-    
-    // Définir une clé API
-    setKey: function(provider, key) {
         if (this.providers[provider]) {
             this.providers[provider].key = key;
             this.providers[provider].enabled = !!key;
@@ -276,7 +279,7 @@ const APIManager = {
         } else if (type === 'image') {
             this.config.activeImageProvider = providerId;
         }
-        Storage.save('api_config', this.config);
+        localStorage.setItem('api_config', this.config);
     }
 };
 
