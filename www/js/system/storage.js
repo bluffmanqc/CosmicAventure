@@ -94,3 +94,26 @@ const Storage = {
     },
 
 };
+
+Storage.load = function() {
+    var data = localStorage.getItem('cosmic_save');
+    if (data) {
+        try {
+            return JSON.parse(data);
+        } catch(e) {
+            console.error('Storage.load error:', e);
+            return null;
+        }
+    }
+    return null;
+};
+
+Storage.save = function(data) {
+    try {
+        localStorage.setItem('cosmic_save', JSON.stringify(data));
+        return true;
+    } catch(e) {
+        console.error('Storage.save error:', e);
+        return false;
+    }
+};
