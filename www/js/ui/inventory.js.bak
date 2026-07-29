@@ -1,11 +1,5 @@
 const Inventory = {
-    currentTab: 'items',
     selectedItem: null,
-    showTab: function(tab) {
-        this.currentTab = tab;
-        this.selectedItem = null;
-        this.render();
-    },
 
     render: function() {
         const char = App.currentCharacter;
@@ -13,13 +7,7 @@ const Inventory = {
         if (!container || !char) return;
 
         let html = '<div class="inventory-grid">';
-        html += '<div class="inv-tabs">';
-        html += '<button onclick="Inventory.showTab(\'items\')" class="btn-tab' + (this.currentTab === 'items' ? ' active' : '') + '">\ud83c\udf92 Objets</button>';
-        html += '<button onclick="Inventory.showTab(\'equipment\')" class="btn-tab' + (this.currentTab === 'equipment' ? ' active' : '') + '">\u2694\ufe0f \u00c9quipement</button>';
-        html += '</div>';
-
-        if (this.currentTab === 'items') {
-        html += '<div class="inv-section"><h3>\ud83c\udf92 Objets</h3>';
+        html += '<div class="inv-section"><h3>🎒 Objets</h3>';
         if (!char.inventory || char.inventory.length === 0) {
             html += '<p class="empty">Inventaire vide</p>';
         } else {
@@ -27,34 +15,31 @@ const Inventory = {
             char.inventory.forEach((item, index) => {
                 const icon = this.getItemIcon(item.category || item.type);
                 html += `<div class="item-card" onclick="Inventory.selectItem(${index})">
-                            <span class="item-icon">${icon}</span>
-                            <span class="item-name">${item.name}</span>
-                            <span class="item-qty">x${item.quantity || 1}</span>
-                        </div>`;
+                    <span class="item-icon">${icon}</span>
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-qty">x${item.quantity || 1}</span>
+                </div>`;
             });
             html += '</div>';
         }
         html += '</div>';
-        }
 
-        if (this.currentTab === 'equipment') {
-        html += '<div class="inv-section"><h3>\u2694\ufe0f \u00c9quipement</h3>';
+        html += '<div class="inv-section"><h3>⚔️ Équipement</h3>';
         if (!char.equipment || char.equipment.length === 0) {
-            html += '<p class="empty">Aucun \u00e9quipement</p>';
+            html += '<p class="empty">Aucun équipement</p>';
         } else {
             html += '<div class="equip-list">';
             char.equipment.forEach((item, index) => {
-                const icon = item.type === 'weapon' ? '\u2694\ufe0f' : '\ud83d\udee1\ufe0f';
+                const icon = item.type === 'weapon' ? '⚔️' : '🛡️';
                 html += `<div class="equip-card">
-                            <span class="item-icon">${icon}</span>
-                            <span class="item-name">${item.name}</span>
-                            <button onclick="Inventory.unequip(${index})" class="btn-small">Retirer</button>
-                        </div>`;
+                    <span class="item-icon">${icon}</span>
+                    <span class="item-name">${item.name}</span>
+                    <button onclick="Inventory.unequip(${index})" class="btn-small">Retirer</button>
+                </div>`;
             });
             html += '</div>';
         }
         html += '</div>';
-        }
 
         html += '<div class="inv-actions" id="inv-actions"></div>';
         html += '</div>';

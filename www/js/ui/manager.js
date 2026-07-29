@@ -13,6 +13,8 @@ const UI = {
                 <button onclick="App.showScreen('skills')" class="nav-btn">🌟 Compétences</button>
                 <button onclick="App.showScreen('ship')" class="nav-btn">🚀 Vaisseau</button>
                 <button onclick="App.showScreen('quest')" class="nav-btn">📜 Quêtes</button>
+                <button onclick="App.showScreen('craft')" class="nav-btn">⚒️ Atelier</button>
+                <button onclick="App.showScreen('grimoire')" class="nav-btn">📖 Grimoire</button>
                 <button onclick="App.showScreen('map')" class="nav-btn">🗺️ Carte</button>
                 <button onclick="App.showScreen('character')" class="nav-btn">👤 Perso</button>
                 <button onclick="App.showScreen('settings')" class="nav-btn">⚙️ Options</button>

@@ -12,7 +12,18 @@ const Combat = {
     start: function(enemy) {
         this.active = true;
         this.enemy = enemy;
-        this.turn = 1;
+        const char = App.currentCharacter;
+        const playerInit = Dice.rollRaw('d20', Rules.attributeModifier(char.attributes.dexterity || char.attributes.agility || 10)).total;
+        const enemyInit = Dice.rollRaw('d20', Math.floor(this.enemy.level / 2)).total;
+        if (enemyInit > playerInit) {
+            this.turn = 0;
+            UI.addStoryEntry('Combat', `⚔️ ${this.enemy.name} prend l'initiative !`);
+            document.getElementById('combat-actions').style.display = 'none';
+            setTimeout(() => this.enemyTurn(), 1000);
+        } else {
+            this.turn = 1;
+            UI.addStoryEntry('Combat', `🛡️ Vous prenez l'initiative !`);
+        }
         UI.showScreen('combat');
         this.render();
         UI.addStoryEntry('Combat', `Un ${enemy.name} (Niv.${enemy.level}) apparaît !`);
@@ -57,7 +68,7 @@ const Combat = {
         const log = document.getElementById('combat-log');
 
         if (action === 'attack') {
-            const attackRoll = Rules.roll('d20', Rules.attributeModifier(char.attributes.strength));
+            const attackRoll = Dice.rollRaw('d20', Rules.attributeModifier(char.attributes.strength));
             const hit = attackRoll.total >= this.enemy.armorClass;
             if (hit) {
                 const dmg = Rules.calculateDamage(char, this.enemy, true);
@@ -72,7 +83,7 @@ const Combat = {
                 return;
             }
             char.currentMP -= 3;
-            const dmg = Rules.roll('d10', Rules.attributeModifier(char.attributes.intelligence)).total;
+            const dmg = Dice.rollRaw('d10', Rules.attributeModifier(char.attributes.intelligence)).total;
             this.enemy.hp -= dmg;
             log.innerHTML += `<p class="damage">✨ Sort inflige <span class="dmg">${dmg}</span> dégâts !</p>`;
         } else if (action === 'item') {
@@ -91,8 +102,9 @@ const Combat = {
                 log.innerHTML += `<p>🎒 ${item.name} ne peut pas être utilisé en combat.</p>`;
             }
         } else if (action === 'flee') {
-            const escapeRoll = Rules.roll('d20', Rules.attributeModifier(char.attributes.agility));
-            if (escapeRoll.total >= 12) {
+            const escapeRoll = Dice.rollRaw('d20', Rules.attributeModifier(char.attributes.agility));
+            const fleeDC = 10 + Math.floor(this.enemy.level / 2);
+            if (escapeRoll.total >= fleeDC) {
                 log.innerHTML += `<p class="heal">🏃 Vous parvenez à vous enfuir !</p>`;
                 setTimeout(() => this.endCombat(false), 1500);
                 return;
@@ -118,7 +130,7 @@ const Combat = {
         const char = App.currentCharacter;
         const log = document.getElementById('combat-log');
 
-        const attackRoll = Rules.roll('d20', Math.floor(this.enemy.level / 2));
+        const attackRoll = Dice.rollRaw('d20', Math.floor(this.enemy.level / 2));
         const hit = attackRoll.total >= (char.armorClass || 10);
 
         if (hit) {
