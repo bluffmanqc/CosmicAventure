@@ -1,110 +1,53 @@
+// ============================================
+// COSMIC AVENTURE - COMBAT MANAGER
+// Boucle de combat interactive avec dés
+// ============================================
 const Combat = {
     active: false,
-    enemy: null,
-    turn: 0,
-
-    init: function() {
-        this.active = false;
-        this.enemy = null;
-        this.turn = 0;
-    },
-
-    start: function(enemy) {
+    data: null,
+    
+    // Démarrer un combat
+    start: function(encounterData) {
         this.active = true;
-        this.enemy = enemy;
-        const char = App.currentCharacter;
-        const playerInit = Dice.rollRaw('d20', Rules.attributeModifier(char.attributes.dexterity || char.attributes.agility || 10)).total;
-        const enemyInit = Dice.rollRaw('d20', Math.floor(this.enemy.level / 2)).total;
-        if (enemyInit > playerInit) {
-            this.turn = 0;
-            UI.addStoryEntry('Combat', `⚔️ ${this.enemy.name} prend l'initiative !`);
-            document.getElementById('combat-actions').style.display = 'none';
-            setTimeout(() => this.enemyTurn(), 1000);
-        } else {
-            this.turn = 1;
-            UI.addStoryEntry('Combat', `🛡️ Vous prenez l'initiative !`);
-        }
-        UI.showScreen('combat');
-        this.render();
-        UI.addStoryEntry('Combat', `Un ${enemy.name} (Niv.${enemy.level}) apparaît !`);
+        this.data = encounterData;
+        
+        // Mise à jour de l'UI
+        document.getElementById('enemy-name').textContent = this.data.enemy.name;
+        document.getElementById('enemy-img').src = Images.getEnemyImage(this.data.enemy);
+        this.updateHPBars();
+        
+        document.getElementById('combat-log').innerHTML = `<p class="damage">⚔️ Le combat commence contre ${this.data.enemy.name} !</p>`;
+        document.getElementById('combat-actions').style.display = 'flex';
+        
+        App.showScreen('combat');
+        
+        // Tour de l'ennemi si l'initiative est mauvaise (simplifié : le joueur commence toujours pour l'UX mobile)
     },
-
-    render: function() {
-        const char = App.currentCharacter;
-        const container = document.getElementById('combat-screen');
-        if (!container) return;
-        container.innerHTML = `
-            <div class="combat-header">
-                <h2>⚔️ Combat — Tour ${this.turn}</h2>
-            </div>
-            <div class="combat-arena">
-                <div class="combat-player">
-                    <h3>${char.name}</h3>
-                    <div class="hp-bar"><div class="hp-fill" style="width:${(char.currentHP/char.maxHP)*100}%"></div></div>
-                    <p>PV: ${char.currentHP}/${char.maxHP} | PM: ${char.currentMP}/${char.maxMP}</p>
-                    <p>Niv.${char.level} | CA: ${char.armorClass || 10}</p>
-                </div>
-                <div class="combat-vs">VS</div>
-                <div class="combat-enemy">
-                    <h3>${this.enemy.name}</h3>
-                    <div class="hp-bar enemy"><div class="hp-fill" style="width:${(this.enemy.hp/this.enemy.maxHP)*100}%"></div></div>
-                    <p>PV: ${this.enemy.hp}/${this.enemy.maxHP}</p>
-                    <p>Niv.${this.enemy.level} | Type: ${this.enemy.type}</p>
-                </div>
-            </div>
-            <div class="combat-log" id="combat-log"></div>
-            <div class="combat-actions" id="combat-actions">
-                <button onclick="Combat.playerAction('attack')" class="btn-primary">⚔️ Attaquer</button>
-                <button onclick="Combat.playerAction('spell')" class="btn-secondary">✨ Sort</button>
-                <button onclick="Combat.playerAction('item')" class="btn-secondary">🎒 Objet</button>
-                <button onclick="Combat.playerAction('flee')" class="btn-danger">🏃 Fuir</button>
-            </div>
-        `;
-    },
-
+    
+    // Action du joueur
     playerAction: function(action) {
         if (!this.active) return;
+        
         const char = App.currentCharacter;
+        const enemy = this.data.enemy;
         const log = document.getElementById('combat-log');
-
+        
         if (action === 'attack') {
-            const attackRoll = Dice.rollRaw('d20', Rules.attributeModifier(char.attributes.strength));
-            const hit = attackRoll.total >= this.enemy.armorClass;
-            if (hit) {
-                const dmg = Rules.calculateDamage(char, this.enemy, true);
-                this.enemy.hp -= dmg;
-                log.innerHTML += `<p class="damage">⚔️ Vous touchez et infligez <span class="dmg">${dmg}</span> dégâts !</p>`;
+            const result = Rules.attack(char, enemy);
+            
+            if (result.criticalHit) {
+                log.innerHTML += `<p class="damage">💥 COUP CRITIQUE ! Vous infligez ${result.damage} dégâts !</p>`;
+            } else if (result.hit) {
+                log.innerHTML += `<p>⚔️ Vous touchez et infligez <span class="damage">${result.damage}</span> dégâts.</p>`;
             } else {
-                log.innerHTML += `<p class="miss">❌ Vous ratez votre attaque...</p>`;
+                log.innerHTML += `<p>💨 Vous ratez votre attaque...</p>`;
             }
-        } else if (action === 'spell') {
-            if (char.currentMP < 3) {
-                log.innerHTML += `<p class="miss">💨 Pas assez de PM !</p>`;
-                return;
-            }
-            char.currentMP -= 3;
-            const dmg = Dice.rollRaw('d10', Rules.attributeModifier(char.attributes.intelligence)).total;
-            this.enemy.hp -= dmg;
-            log.innerHTML += `<p class="damage">✨ Sort inflige <span class="dmg">${dmg}</span> dégâts !</p>`;
-        } else if (action === 'item') {
-            if (!char.inventory || char.inventory.length === 0) {
-                log.innerHTML += `<p class="miss">🎒 Inventaire vide !</p>`;
-                return;
-            }
-            const item = char.inventory[0];
-            if (item.type === 'consumable' || item.category === 'consumable') {
-                const heal = item.heal || 10;
-                char.currentHP = Math.min(char.maxHP, char.currentHP + heal);
-                item.quantity = (item.quantity || 1) - 1;
-                if (item.quantity <= 0) char.inventory.shift();
-                log.innerHTML += `<p class="heal">🧪 Vous utilisez ${item.name} et récupérez ${heal} PV !</p>`;
-            } else {
-                log.innerHTML += `<p>🎒 ${item.name} ne peut pas être utilisé en combat.</p>`;
-            }
-        } else if (action === 'flee') {
-            const escapeRoll = Dice.rollRaw('d20', Rules.attributeModifier(char.attributes.agility));
-            const fleeDC = 10 + Math.floor(this.enemy.level / 2);
-            if (escapeRoll.total >= fleeDC) {
+            
+            enemy.hp -= result.damage;
+        } 
+        else if (action === 'flee') {
+            const escapeRoll = Rules.attributeTest(char, 'agilite', 12);
+            if (escapeRoll.success) {
                 log.innerHTML += `<p class="heal">🏃 Vous parvenez à vous enfuir !</p>`;
                 setTimeout(() => this.endCombat(false), 1500);
                 return;
@@ -112,85 +55,106 @@ const Combat = {
                 log.innerHTML += `<p>💨 Vous tentez de fuir mais vous trébuchez...</p>`;
             }
         }
-
+        else if (action === 'item') {
+            log.innerHTML += `<p>🎒 (Système d'objet à développer dans l'inventaire)</p>`;
+        }
+        
         this.updateHPBars();
         document.getElementById('combat-actions').style.display = 'none';
-
-        if (this.enemy.hp <= 0) {
-            log.innerHTML += `<p class="heal">🏆 Victoire ! Vous avez vaincu ${this.enemy.name}.</p>`;
+        
+        // Vérifier victoire
+        if (enemy.hp <= 0) {
+            log.innerHTML += `<p class="heal">🏆 Victoire ! Vous avez vaincu ${enemy.name}.</p>`;
             setTimeout(() => this.endCombat(true), 2000);
             return;
         }
-
+        
+        // Tour de l'ennemi après un court délai
         setTimeout(() => this.enemyTurn(), 1000);
     },
-
+    
+    // Tour de l'ennemi
     enemyTurn: function() {
         if (!this.active) return;
+        
         const char = App.currentCharacter;
+        const enemy = this.data.enemy;
         const log = document.getElementById('combat-log');
-
-        const attackRoll = Dice.rollRaw('d20', Math.floor(this.enemy.level / 2));
-        const hit = attackRoll.total >= (char.armorClass || 10);
-
-        if (hit) {
-            const dmg = Rules.calculateEnemyDamage(this.enemy.level);
-            char.currentHP -= dmg;
-            log.innerHTML += `<p class="damage-enemy">💥 ${this.enemy.name} vous inflige <span class="dmg">${dmg}</span> dégâts !</p>`;
+        
+        const result = Rules.attack(enemy, char);
+        
+        if (result.criticalHit) {
+            log.innerHTML += `<p class="damage">💥 L'ennemi vous inflige un coup CRITIQUE de ${result.damage} dégâts !</p>`;
+        } else if (result.hit) {
+            log.innerHTML += `<p>🩸 ${enemy.name} vous touche et inflige <span class="damage">${result.damage}</span> dégâts.</p>`;
         } else {
-            log.innerHTML += `<p class="miss">🛡️ ${this.enemy.name} rate son attaque !</p>`;
+            log.innerHTML += `<p>🛡️ Vous esquivez l'attaque de l'ennemi !</p>`;
         }
-
+        
+        char.currentHP -= result.damage;
         this.updateHPBars();
-
+        
+        // Vérifier défaite
         if (char.currentHP <= 0) {
-            log.innerHTML += `<p class="damage-enemy">💀 Vous êtes vaincu...</p>`;
+            log.innerHTML += `<p class="damage">☠️ Vous êtes tombé au combat...</p>`;
             setTimeout(() => this.endCombat(false, true), 2000);
             return;
         }
-
-        this.turn++;
-        document.getElementById('combat-actions').style.display = 'flex';
-        this.render();
+        
+        // Retour au joueur
+        setTimeout(() => {
+            document.getElementById('combat-actions').style.display = 'flex';
+            log.scrollTop = log.scrollHeight;
+        }, 800);
     },
-
+    
+    // Mettre à jour les barres de vie
     updateHPBars: function() {
         const char = App.currentCharacter;
-        const playerBar = document.querySelector('.combat-player .hp-fill');
-        const enemyBar = document.querySelector('.combat-enemy .hp-fill');
-        if (playerBar) playerBar.style.width = `${Math.max(0, (char.currentHP / char.maxHP) * 100)}%`;
-        if (enemyBar) enemyBar.style.width = `${Math.max(0, (this.enemy.hp / this.enemy.maxHP) * 100)}%`;
+        const enemy = this.data.enemy;
+        
+        const charPercent = Math.max(0, (char.currentHP / char.maxHP) * 100);
+        const enemyPercent = Math.max(0, (enemy.hp / enemy.maxHP) * 100);
+        
+        document.getElementById('player-combat-hp-bar').style.width = `${charPercent}%`;
+        document.getElementById('player-combat-hp-bar').style.background = charPercent < 30 ? 'var(--accent)' : 'var(--success)';
+        document.getElementById('player-combat-hp-text').textContent = `HP: ${char.currentHP}/${char.maxHP}`;
+        document.getElementById('player-combat-name').textContent = char.name;
+        document.getElementById('player-combat-img').src = Images.getCharacterPortrait(char);
+        
+        document.getElementById('enemy-hp-bar').style.width = `${enemyPercent}%`;
+        document.getElementById('enemy-hp-bar').style.background = enemyPercent < 30 ? 'var(--accent)' : 'var(--warning)';
+        document.getElementById('enemy-hp-text').textContent = `HP: ${Math.max(0, enemy.hp)}/${enemy.maxHP}`;
     },
-
+    
+    // Fin du combat
     endCombat: function(victory, isDeath = false) {
         this.active = false;
-        const char = App.currentCharacter;
-
+        
         if (victory) {
-            const xpGain = this.enemy.xpReward;
-            char.xp += xpGain;
-
-            const loot = Grimoire.generateRandomLoot ? Grimoire.generateRandomLoot(char.level, 2) : [];
-            if (loot.length > 0) {
-                char.inventory = char.inventory || [];
-                char.inventory.push(...loot);
-            }
-
-            UI.addStoryEntry('Victoire !', `Vous avez gagné ${xpGain} XP${loot.length > 0 ? ' et trouvé des objets.' : '.'}`);
-
-            const levelUp = Rules.checkLevelUp(char);
+            const xpGain = this.data.enemy.xp;
+            App.currentCharacter.xp += xpGain;
+            
+            // Loot
+            const loot = Grimoire.generateRandomLoot(App.currentCharacter.level, 2);
+            App.currentCharacter.inventory.push(...loot);
+            
+            UI.addStoryEntry('Victoire !', `Vous avez gagné ${xpGain} XP et trouvé des objets.`);
+            
+            // Vérifier niveau
+            const levelUp = Rules.checkLevelUp(App.currentCharacter);
             if (levelUp.leveledUp) {
                 UI.addStoryEntry('Niveau Supérieur !', `Vous passez au niveau ${levelUp.newLevel} ! Vos PV augmentent de ${levelUp.hpGain}.`);
             }
-
-            Storage.saveCharacter(char);
+            
+            Storage.saveCharacter(App.currentCharacter);
         } else if (isDeath) {
             UI.addStoryEntry('Game Over', 'Votre aventure prend fin ici. Vous serez ramené au dernier point de sauvegarde.');
-            char.currentHP = Math.floor(char.maxHP / 2);
-            char.credits = Math.max(0, (char.credits || 0) - 50);
-            Storage.saveCharacter(char);
+            App.currentCharacter.currentHP = Math.floor(App.currentCharacter.maxHP / 2);
+            App.currentCharacter.credits = Math.max(0, App.currentCharacter.credits - 50);
+            Storage.saveCharacter(App.currentCharacter);
         }
-
+        
         setTimeout(() => {
             App.showScreen('game');
             App.generateNextEncounter();
